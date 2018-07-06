@@ -1,34 +1,42 @@
 # -*- coding: utf-8 -*-
 
-from autobahn.twisted.wamp import ApplicationRunner
-from twisted.internet.defer import inlineCallbacks
-from twisted.internet import reactor
-
-from lie_system import LieApplicationSession
+from mdstudio.deferred.chainable import chainable
+from mdstudio.component.session import ComponentSession
+from mdstudio.runner import main
 
 
-class LIEWorkflow(LieApplicationSession):
+dict_convert = {
+    "output_format": "mol2",
+    "workdir": "/tmp/mdstudio/lie_structures/convert",
+    "input_format": "smi",
+    "mol": "O1[C@@H](CCC1=O)CCC",
+    "from_file": False,
+    "to_file": False
+}
 
-    @inlineCallbacks
-    def onRun(self, details):
 
-        mol = yield self.call(u'liestudio.structure.convert', input_format='smi', output_format='mol2',
-                        mol='O1[C@@H](CCC1=O)CCC')
-        pdb = yield self.call(u'liestudio.structure.make3d', input_format='mol2', mol=mol['mol'])
+class Run_example(ComponentSession):
 
-        print pdb['mol']
+    def authorize_request(self, uri, claims):
+        return True
 
-        self.disconnect()
-        reactor.stop()
+    @chainable
+    def on_run(self):
 
-        yield True
+        mol = yield self.call(
+            'mdgroup.lie_structures.endpoint.convert', dict_convert)
+        print(mol)
+
+        pdb = yield self.call(
+            'mdgroup.lie_structures.endpoint.make3d',
+            {'input_format': 'mol2',
+             'output_format': 'pdb',
+             'mol': mol['mol'],
+             'from_file': False,
+             'to_file': False,
+             'workdir': "/tmp/mdstudio/lie_structures/convert"})
+        print(pdb['mol'])
 
 
 if __name__ == '__main__':
-
-    runner = ApplicationRunner(
-        u"ws://localhost:8080/ws",
-        u"liestudio",
-        extra={'authid': u'lieadmin', 'password': u'liepw@#', 'authmethod': u'ticket'},
-    )
-    runner.run(LIEWorkflow, auto_reconnect=False)
+    main(Run_example)

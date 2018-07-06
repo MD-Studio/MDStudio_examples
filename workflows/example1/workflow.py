@@ -59,7 +59,6 @@ class ExampleWorkflow(ComponentSession):
 
         # Build Workflow
         wf = Workflow()
-
         # Task 1: convert the SMILES string to mol2 format (2D).
 
         # Add a task using the 'add_task' method always defining:
@@ -70,7 +69,6 @@ class ExampleWorkflow(ComponentSession):
                          task_type='WampTask',
                          uri='mdgroup.lie_structures.endpoint.convert',
                          store_output=True)
-
         # Use 'set_input' do define the input to a task. As we are now building
         # a workflow specification these will be task constants but the same
         # method will be used later on to define specific input when using the
@@ -175,8 +173,7 @@ class ExampleWorkflow(ComponentSession):
 
         # Save the workflow specification
         wf.save('workflow_spec.jgf')
-
-
+        # wf.save(os.path.join(cwd, 'workflow_spec.jgf'))
         # Lets run the workflow specification for a number of ligand SMILES
         # The current microservice instance (self) is passed as task_runner to the workflow
         # it will be used to make calls to other microservice endpoints when task_type equals WampTask.
@@ -193,8 +190,6 @@ class ExampleWorkflow(ComponentSession):
                 yield sleep(1)
 
             os.chdir(currdir)
-
-
 
 
 if __name__ == "__main__":
