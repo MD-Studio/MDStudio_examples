@@ -54,7 +54,7 @@ class ExampleWorkflow(ComponentSession):
         # specification
         ligand_format = 'smi'
         pH = 7.4
-        protein_file = 'protein.mol2'
+        protein_file = os.path.abspath('protein.mol2')
         protein_binding_center = [4.9264, 19.0796, 21.9892]
 
         # Build Workflow
