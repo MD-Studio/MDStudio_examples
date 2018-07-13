@@ -25,6 +25,10 @@ List available cheminformatics packages offerd by the lie_structures service
 
     >>> python -m lie_cli -u mdgroup.lie_structures.endpoint.supported_toolkits
 
+Get some information on a molecular structure
+
+    >>> python -m lie_cli -u mdgroup.lie_structures.endpoint.info --mol asperine.mol2 --input_format mol2
+
 Query for topology and parameter files in [Automated Topology Builder](https://atb.uq.edu.au) database based on a compound common name
 
     >>> python -m lie_cli -u mdgroup.lie_atb.endpoint.molecule_query --common_name aspirin --atb_api_token <ATB API token>
