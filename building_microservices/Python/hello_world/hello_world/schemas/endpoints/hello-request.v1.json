@@ -2,11 +2,18 @@
     "$schema": "http://json-schema.org/draft-04/schema",
     "description": "This is how you should define your message send to the hello endpoint",
     "properties": {
-        "message": {
-            "$ref": "resource://mdgroup/hello_world/hello-message/v1",
-            "description": "The proper way of creating the message is defined in the hello-message resource"
+        "greeting": {
+            "type": "string",
+            "description": "The message you will use to greet the hello endpoint"
+        },
+        "sendTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The datetime at which your greeting was sent"
         }
     },
-    "required": ["message"],
+    "required":[
+        "greeting"
+    ],
     "additionalProperties": false
 }

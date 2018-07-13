@@ -8,7 +8,7 @@ The examples in this directory will guide you through the steps of setting up th
 basic skeleton of a MDStudio microservice, adding functional endpoints and using some
 of the advanced options in the MDStudio framework.
 
-We will start with the compulsary `hello world` example and then move on to more
+We will start with the compulsory `hello world` example and then move on to more
 advanced examples.
 
 ### Entry-level knowledge
@@ -37,8 +37,10 @@ needs to be installed `in-place` using the `-e` option of pip:
 
 ## Example 1: A "Hello World" microservice
 
-The "Hello World" microservice is a very basic microservice that exposes one endpoint
-that, when called, returns a "hello world" message with a time stamp.
+The "Hello World" microservice is a very basic microservice that exposes one endpoint that
+accepts a "greeting" from the user and returns that same message prefixed with "Hello World!".
+In addition it returns some timing information (time the message was send and the answer
+returned).
 Although not a very exiting result it illustrates the basic framework of a Python
 microservice that will serve as the blueprint for all the other examples.
 
@@ -47,19 +49,18 @@ The `~/hello_world` directory contains the example code. Let's go through it ste
 
 ### 1: Directory structure
 
-The directory structure of a Python component reassembles that of a Python package.
-There is plenty of information available online such as [here](http://python-packaging.readthedocs.io/en/latest/)
+The directory structure of a Python component reassembles that of a Python package such as
+described [here](http://python-packaging.readthedocs.io/en/latest/) among others.
 As a minimum that directory should have the following structure (as for the hello_world
 example):
 
     hello_world/
         hello_world/
             schemas/
+                settings.json
                 endpoints/
                     hello.request.v1.json
                     hello.response.v1.json
-                resources/
-                    hello-message.v1.json
             __init__.py
             __main__.py
             application.py
@@ -70,31 +71,31 @@ example):
   case it is named the same way as the actual package one level down (`hello_world`)
 - The `setup.py` file is the main file with all information on how to install the package in the
   users Python environment. It is a regular Python file where `setuptools` is imported and used
-  to install the package. The information used for installation is represented as Python dictionary.
+  to install the package. The installation information is represented as Python dictionary.
   Package installation tools such as [pip](https://packaging.python.org/tutorials/installing-packages/)
   also make use of this. Setup.py is also the file where you want to list any Python package dependencies
   that your code might have in particular when these dependencies are hosted on the
   [Python Package Index](https://pypi.org) in case of which they will be resolved automatically at
   installation time.
-- The `settings.yml` (a YAML file) contains the default settings of the component. More on them below.
+- The `settings.yml` (a YAML file) contains the default settings of the component. More on that below.
 - The `hello_world` sub directory contains the actual package code which equals the distribution name
   as defined in `setup.py`.
 - Inside the `hello_world` package directory there should be an `__init__.py` file necessary for Python to
   recognize it as a package. It should ideally remain empty. There is also a `__main__.py` that contains
   the startup script for the component.
-- The `application.py` (or any other name) contains the actual microservice API interface with endpoints
-  it exposes.
+- The `application.py` (or any other name) contains the actual microservice API interface defining the
+  endpoints it exposes.
 - The `schemas` directory is something you normally do not find in a Python package. It contains the
   JSON schemas that describe the input (\*.request.v1.json) and output (\*.response.v1.json) of a
-  microservice endpoint. A JSON schema contains meta-data describing a JSON construct, the message format
-  that is been send between microservice endpoints. A JSON schema describes the parameters that an endpoints
+  microservice endpoint. A JSON schema contains meta-data describing a JSON construct the message format
+  that is been send between microservice endpoints. A JSON schema describes the parameters that an endpoint
   accepts and returns, what type and format they have, there default value, if they are required or not and
   so on. These schema's are used to inform the user on the requirements of an endpoint and to validate the
   data passed between them.
   When a microservice registers itself with the MDStudio broker the schema definitions are registered by a
   special `schema` microservice that is part of the MDStudio core framework. Central registration enables the
   MDStudio broker to validate all messages passed between microservices and potentially allows schemas to be
-  reused by others. The schema registration supports visioning (hence the `v1` in the schema name) that
+  reused by others. The schema registration supports versioning (hence the `v1` in the schema name) that
   allows for a degree of backwards compatibility when newer versions of a microservice are released.
 
 ### The HelloWorld microservice API
@@ -142,7 +143,7 @@ any initiation routines your service might require.
 
 In our "Hello World" example we are using the method to call the hello endpoint on our own microservice to
 illustrate how to call other endpoints and deal with asynchronous nature of these calls.
-More on these topics follows below
+More on these topics follows below.
 
 
 **Endpoint registration**
@@ -170,7 +171,8 @@ and validating the output with the `{output-schema}`.
 
 
 **Settings**
-Microservices are independant and therefor share no global configuration variable.
+
+Microservices are independent and therefor share no global configuration variables.
 For service-specific configuration and session configuration (details for automatic login), you can use all or any of
 - settings.json
 - .settins.json
@@ -193,6 +195,10 @@ The settings are loaded into the `ComponentSession` in the variable `self.compon
 - The `static` section is used for vendor-defined (the component developer) settings.
 - The `settings` section is intended for component settings that are variable and can be changed.
 
+In the "hello world" example the use of service-specific settings is illustrated by the `printInEndpoint` parameter
+in settings.dev.yml. When enabled (true) is instructs the hello endpoint to print the content of the request and
+response objects to stdout.
+
 
 **Logging in microservices**
 
@@ -205,79 +211,109 @@ instantiates a Python `logging` instance for you automatically (`self.log`). Thi
 that logs to the 'log' microservice.
 
 
-### Calling methods
-In the example, the component calls itself once the registration is complete, by scheduling the call two seconds later with `call_later(2, call_hello)`.
+**Calling endpoints**
 
-    @chainable
-    def call_hello(self):
-        with self.group_context('mdgroup'):
-            send_time = now()
-            response = yield self.call('mdgroup.echo.endpoint.hello', {
-                'message': {
-                    'greeting': 'Hello World!',
-                    'sendTime': send_time
-                }
-            })
+In the "hello world" example the microservice calls its own 'hello' endpoint in the `on_run` method once
+the registration is complete. The call is made in the `call_hello` method.
 
-A few things happen here: the context is switched from the default user context for calling to the group context of `mdgroup`.
-This makes sure that you are authorized to call the endpoint as the given group, and sign the group into your claims.
-The context is automatically restored after the indented `with` codeblock, even if the call fails.
+This and other events are run asynchronously from the main service event loop. The programming model where
+multiple events may occur simultaneously might be confusing if you are used to a world where things run
+sequentially.
+The `on_run` method for instance is already called when the endpoint registration might still be ongoing.
+To avoid the situation where we are calling the 'hello' endpoint while it is not yet registered we make
+the call to the `call_hello` method with a 2 seconds delay using:
 
-#### Chainable
-The `@chainable` decorator is an extension of (and should therefore be preferred over) the previously used `@inlineCallbacks`.
-Functions wrapped in chainable support the `yield` syntax, as well as chaining methods with the result.
-For example:
+    call_later(2, self.call_hello)
 
-    # call('some.uri') result:
-    # {
-    #     'property': {
-    #         'nested-property': {
-    #             'value': 0
-    #         }
-    #     }
-    # }
+That is sufficient to allow endpoint registration to finish before calling it.
 
-    # old style
-    @inlineCallbacks
-    def first_method():
-        result = yield call('some.uri')
-        returnValue(result['property'])
+In the `call_hello` method you might have noticed that the call to the microservice endpoint is made using
+a `yield` statement.
 
-    @inlineCallbacks
-    def second_method():
-        result = yield first_method()
-        calculated_value = result['nested-property'] + 1
-        returnValue(calculated_value)
+    response = yield self.group_context('mdgroup').call('mdgroup.hello_world.endpoint.hello', {
+            'greeting': 'Calling self',
+            'sendTime': send_time
+        })
+
+This is because the asynchronous call to the endpoint may not immediately return a result and in the meantime
+the main thread continues. Therefore, the `response` variable becomes "promise" or "deferred" object wich is
+basically a placeholder that will hold a result that is provided at a later point in time.
+
+Using asynchronous calls in functions will propagate through the call chain and thus affecting other functions
+that rely on the results of the asynchronous call.
+The `@chainable` decorator added to the method controls this behaviour allowing a more problem free chaining of
+methods with a yield statement.
 
 
-    # new style
-    def first_method():
-        result = call('some.uri')
-        return result['property']  # this is chained to the Chainable result of `call`
+## Running a Python microservice
 
-    @chainable
-    def second_method()
-        calculated_value = (yield first_method()['nested-property']) + 1
-
-        return_value(calculated_value)
-
-This example is not to promote the style of `call` without `yield`, but to demonstrate the power of chaining.
-It is now not always necessary to use the decorator, even when we need to extract something from a deferred result!
-Everything you need for this is defined in the `mdstudio` library.
-
-### Running your component
-For running your component, you need a (very small) `__main__.py` script, containing the following.
+That's it! you finished writing your (first) Python microservice and are ready to try it out.
+Running a service is controlled from the (very small) `__main__.py` script:
 
     from mdstudio.runner import main
-    from my_component.application import MyComponent
+    from hello_world.application import HelloWorldComponent
 
     if __name__ == '__main__':
-        main(MyComponent)
+        main(HelloWorldComponent)
 
-That's it! You can now install your component and run it!
+The `if __name__ == '__main__':` statement ensures that the 'hello_world' package can be run
+as a program. When done, our API class (HelloWorldComponent) is given to the `main` function
+from the mdstudio library that runs it in a microservice application runtime until it is stopped.
 
-    >>> pipenv shell
-    >>> pip install -e components/my_component
-    >>> python -m my_component
+You can directly start the microservice by navigating into the `hello_world` package and running
 
+    >>> python hello_world/
 
+or you install the package first and then run it as:
+
+    >>> pip install hello_world/
+    >>> python -m hello_world
+
+With either method you probably noticed an error message stating that you are not authorized to
+run this microservice in the MDStudio environment. This is intended from a security point of view.
+Two things are required to fix this:
+
+- Informing the MDStudio broker that our microservice is allowed to connect.
+- Authorizing the microservice with the MDStudio broker when it is launched.
+
+For the first we need to register the name of our microservice with the authentication microservice
+of the MDStudio framework. Open the `settings.dev.yml` file in ~/MDStudio/core/auth/ and add the
+microservice name ('hello_world') as part of the `mdgroup` as:
+
+      groups:
+      - groupName: mdgroup
+        owner: mdadmin
+        components:
+          - common_resources
+          - echo
+          - lie_amber
+          - lie_atb
+          - lie_haddock
+          - lie_md
+          - lie_plants_docking
+          - lie_propka
+          - lie_pylie
+          - lie_structures
+          - hello_world
+
+Relaunch the MDStudio environment for the changes to take effect.
+
+The second requirement is dealt with by the inclusion of the `settings.dev.yml` file. Here we state
+that the user `mdadmin` is allowed to register the service (see above). In development mode we do not
+require a password to be set.
+Now ensure that you lanch the microservice from a directory where the `settings.dev.yml` file is
+available. Doing so should welcome you with something like the following log messages:
+
+    2018-07-13T14:28:53+0200 Crossbar host is: localhost
+    2018-07-13T14:28:53+0200 Collecting logs on session "HelloWorldComponent"
+    2018-07-13T14:28:55+0200 Verification of server SCRAM signature successful
+    2018-07-13T14:28:55+0200 Uploaded schemas for HelloWorldComponent
+    2018-07-13T14:28:55+0200 Waiting a few seconds for things to start up
+    2018-07-13T14:28:55+0200 HelloWorldComponent: 1 procedures successfully registered
+    2018-07-13T14:28:57+0200    User -> Component delay:    72.00 ms
+    2018-07-13T14:28:57+0200    Component -> User delay:     4.00 ms
+    2018-07-13T14:28:57+0200                Total delay:    76.00 ms
+
+Congratulations, your microservice is running and 1 procedure (endpoint) is registered and ready to be
+used. More on how to use it is described in the `using_microservice` directory of the MDStudio_examples
+repository.

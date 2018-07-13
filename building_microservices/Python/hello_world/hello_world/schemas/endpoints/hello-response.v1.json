@@ -2,9 +2,14 @@
     "$schema": "http://json-schema.org/draft-04/schema",
     "description": "This is how the hello endpoint responds to your greeting",
     "properties": {
-        "message": {
-            "$ref": "resource://mdgroup/hello_world/hello-message/v1",
-            "description": "The hello endpoint will return your greeting prefixed with Hello World!"
+        "greeting": {
+            "type": "string",
+            "description": "The message you used to greet the hello endpoint prefixed with 'Hello World!'"
+        },
+        "sendTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The datetime at which your greeting was sent"
         },
         "returnTime": {
             "type": "string",
@@ -12,6 +17,6 @@
             "description": "The datetime the hello_world microservice initiated the return"
         }
     },
-    "required": ["message", "returnTime"],
+    "required": ["greeting", "returnTime"],
     "additionalProperties": false
 }

@@ -47,11 +47,17 @@ class HelloWorldComponent(ComponentSession):
             pprint(request)
 
         return_time = now()
-        send_time = from_utc_string(request['message']['sendTime'])
+
+        # The 'sendTime' argument is not required. Set to current time if not provided
+        if 'sendTime' not in request:
+            self.log.info('No "sendTime" argument in request, set to current time')
+            send_time = return_time
+        else:
+            send_time = from_utc_string(request['sendTime'])
 
         # Reuse the request dictionary as response
-        request['message']['greeting'] = 'Hello World!: {0}'.format(request['message']['greeting'])
-        request['message']['sendTime'] = send_time
+        request['greeting'] = 'Hello World!: {0}'.format(request['greeting'])
+        request['sendTime'] = send_time
         request['returnTime'] = return_time
 
         # Log the call delay
@@ -75,10 +81,8 @@ class HelloWorldComponent(ComponentSession):
 
         send_time = now()
         response = yield self.group_context('mdgroup').call('mdgroup.hello_world.endpoint.hello', {
-            'message': {
-                'greeting': 'Calling self',
-                'sendTime': send_time
-            }
+            'greeting': 'Calling self',
+            'sendTime': send_time
         })
 
         # Reporting some delay times of the round call
