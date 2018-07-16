@@ -1,0 +1,14 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema",
+    "description": "General description for roundrobin endpoints requests",
+    "properties": {
+        "number": {
+            "type": "integer",
+            "description": "Number to multiply"
+        }
+    },
+    "required":[
+        "number"
+    ],
+    "additionalProperties": false
+}
