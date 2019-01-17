@@ -18,7 +18,7 @@ Omitting the 'greeting' parameter fails as it is set as 'required' in the JSON s
 
 Using the lie_structures microservice to convert a molecule structure file format from 'mol2' to 'pdb'
 
-    >>> mdstudio-cli -u mdgroup.lie_structures.endpoint.convert --mol asperine.mol2 --output_format pdb --input_format mol2
+    >>> mdstudio-cli -u mdgroup.lie_structures.endpoint.convert --mol asperine.mol2 --output_format pdb
 
 List available cheminformatics packages offerd by the lie_structures service
 
