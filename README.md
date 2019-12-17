@@ -1,4 +1,6 @@
-# MDStudio_examples
+# MDStudio examples
+
+![Configuration settings](mdstudio-logo.png)
 
 This repository hosts a series of examples to illustrate the development
 and use of microservices for the MDStudio environment.
