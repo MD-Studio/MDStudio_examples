@@ -40,8 +40,7 @@ needs to be installed `in-place` using the `-e` option of pip:
 The "Hello World" microservice is a very basic microservice that exposes one endpoint that
 accepts a "greeting" from the user and returns that same message prefixed with "Hello World!".
 In addition it returns some timing information (time the message was send and the answer
-returned).
-Although not a very exiting result it illustrates the basic framework of a Python
+returned). Although not a very exiting result it illustrates the basic framework of a Python
 microservice that will serve as the blueprint for all the other examples.
 
 The `~/hello_world` directory contains the example code. Let's go through it step-by-step.
@@ -59,8 +58,8 @@ example):
             schemas/
                 settings.json
                 endpoints/
-                    hello.request.v1.json
-                    hello.response.v1.json
+                    hello_request.v1.json
+                    hello_response.v1.json
             __init__.py
             __main__.py
             application.py
@@ -286,15 +285,16 @@ microservice name ('hello_world') as part of the `mdgroup` as:
         components:
           - common_resources
           - echo
-          - lie_amber
-          - lie_atb
-          - lie_haddock
-          - lie_md
-          - lie_plants_docking
-          - lie_propka
-          - lie_pylie
-          - lie_structures
           - hello_world
+          - mdstudio_gromacs
+          - mdstudio_propka
+          - mdstudio_atb
+          - mdstudio_amber
+          - mdstudio_smartcyp
+          - mdstudio_structures
+          - mdstudio_pylie
+          - mdstudio_haddock
+          - roundrobin
 
 Relaunch the MDStudio environment for the changes to take effect.
 
