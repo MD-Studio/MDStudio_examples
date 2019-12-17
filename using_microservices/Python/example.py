@@ -17,7 +17,7 @@ class PythonExample(ComponentSession):
 
         # Convert SMILES string into 1D mol2 file
         # Note: the SMILES string is defined as 'path_file' object
-        mol = yield self.call('mdgroup.lie_structures.endpoint.convert',
+        mol = yield self.call('mdgroup.mdstudio_structures.endpoint.convert',
                               {"output_format": "mol2",
                                "mol": {"content": "O1[C@@H](CCC1=O)CCC",
                                        "extension": "smi",
@@ -27,7 +27,7 @@ class PythonExample(ComponentSession):
         # Convert 1D mol2 file into 3D PDB file
         # Note: the returned 'mol' path_file object is used as input for make3D
         pdb = yield self.call(
-            'mdgroup.lie_structures.endpoint.make3d',
+            'mdgroup.mdstudio_structures.endpoint.make3d',
             {'input_format': 'mol2',
              'output_format': 'pdb',
              'mol': mol['mol']})
