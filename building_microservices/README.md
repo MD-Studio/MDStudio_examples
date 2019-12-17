@@ -1,7 +1,7 @@
 # Building MDStudio microservices
 
-With MDStudio we went a long way to make writing microservices an easy task
-and it should be so you should focus on writing functional code and leave
+With MDStudio we went a long way to make writing microservices an easy task.
+And it should be so you should focus on writing functional code and leave
 the infrastructure to us.
 
 The examples in this directory will guide you in setting up the thin layer

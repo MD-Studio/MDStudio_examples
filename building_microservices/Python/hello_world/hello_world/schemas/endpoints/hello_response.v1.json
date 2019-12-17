@@ -1,5 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema",
+    "id": "http://mdstudio/schemas/endpoints/hello_response.v1.json",
     "description": "This is how the hello endpoint responds to your greeting",
     "properties": {
         "greeting": {

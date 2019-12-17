@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 
 distribution_name = 'hello_world'
+
 setup(
     name=distribution_name,
     version='1.0.0',
@@ -14,8 +15,8 @@ setup(
     keywords='MDStudio microservice hello-world',
     platforms=['Any'],
     packages=find_packages(),
+    package_data={distribution_name: ['schemas/*', 'schemas/endpoints/*']},
     py_modules=[distribution_name],
-    install_requires=[],
     test_suite="tests",
     include_package_data=True,
     zip_safe=True,

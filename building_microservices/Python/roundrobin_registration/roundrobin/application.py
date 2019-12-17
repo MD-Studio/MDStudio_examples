@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # mdstudio library imports
 from mdstudio.component.session import ComponentSession
 from mdstudio.api.endpoint import endpoint
@@ -18,7 +20,7 @@ class RoundrobinComponent(ComponentSession):
         # Authorize calls to API endpoints
         return True
 
-    @endpoint('parallel', 'roundrobin-request', 'roundrobin-response',
+    @endpoint('parallel', 'roundrobin_request', 'roundrobin_response',
               options=RegisterOptions(invoke=u'roundrobin'))
     def parallel_call(self, request, claims):
         """
@@ -32,7 +34,7 @@ class RoundrobinComponent(ComponentSession):
         request['number'] = request['number']**POWER
         return request
 
-    @endpoint('sequential','roundrobin-request', 'roundrobin-response')
+    @endpoint('sequential','roundrobin_request', 'roundrobin_response')
     def sequential_call(self, request, claims):
         """
         Sequential call

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # mdstudio library imports
 from mdstudio.component.session import ComponentSession
 from mdstudio.api.endpoint import endpoint
@@ -27,7 +29,7 @@ class HelloWorldComponent(ComponentSession):
         call_later(2, self.call_hello)
         print('Waiting a few seconds for things to start up')
 
-    @endpoint('hello', 'hello-request', 'hello-response')
+    @endpoint('hello', 'hello_request', 'hello_response')
     def hello(self, request, claims):
         """
         hello endpoint
@@ -57,8 +59,8 @@ class HelloWorldComponent(ComponentSession):
 
         # Reuse the request dictionary as response
         request['greeting'] = 'Hello World!: {0}'.format(request['greeting'])
-        request['sendTime'] = send_time
-        request['returnTime'] = return_time
+        request['sendTime'] = send_time.isoformat()
+        request['returnTime'] = return_time.isoformat()
 
         # Log the call delay
         self.report_delay('User -> Component', return_time - send_time)

@@ -1,5 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema",
+    "id": "http://mdstudio/schemas/endpoints/hello_request.v1.json",
     "description": "This is how you should define your message send to the hello endpoint",
     "properties": {
         "greeting": {

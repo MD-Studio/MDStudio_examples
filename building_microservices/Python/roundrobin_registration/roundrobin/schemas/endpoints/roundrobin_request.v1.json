@@ -1,5 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema",
+    "id": "http://mdstudio/schemas/endpoints/roundrobin_request.v1.json",
     "description": "General description for roundrobin endpoints requests",
     "properties": {
         "number": {

@@ -40,4 +40,4 @@ class UserSession(ComponentSession):
 
 
 if __name__ == '__main__':
-    main(UserSession)
+    main(UserSession, daily_log=False)
