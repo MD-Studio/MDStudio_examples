@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import glob
-import pickle
 
 from autobahn.twisted.util import sleep
 
@@ -10,7 +8,7 @@ from mdstudio.deferred.chainable import chainable
 from mdstudio.component.session import ComponentSession
 from mdstudio.runner import main
 
-from lie_workflow import Workflow
+from mdstudio_workflow import Workflow
 
 CURRDIR = os.getcwd()
 
@@ -39,25 +37,34 @@ class LoopDemonstrationWorkflow(ComponentSession):
         #         of steps in the workflow can obtained from tasks outside of
         #         the loop
         t1 = wf.add_task('Array provider')
-        t1.set_input(output_format='mol2', steps=100)
+        t1.set_input(output_format='mol2',
+                     steps=100)
 
         # Task 2: Add loop task. The 'mapper_arg' defines the parameter name in
         #         the input that holds an iterable of input values to iterate
         #         over. The 'loop_end_task' is required and defines the task
         #         that 'closes' the loop and collects all results.
-        t2 = wf.add_task('Loop', task_type='LoopTask', mapper_arg='smiles', loop_end_task='Collector')
+        t2 = wf.add_task('Loop',
+                         task_type='LoopTask',
+                         mapper_arg='smiles',
+                         loop_end_task='Collector')
         wf.connect_task(t1.nid, t2.nid)
 
         # Task 3: Convert SMILES to mol2
         # Convert ligand to mol2 format irrespective of input format.
-        t3 = wf.add_task('Ligand conversion', task_type='WampTask', uri='mdgroup.lie_structures.endpoint.convert')
+        t3 = wf.add_task('Ligand conversion',
+                         task_type='WampTask',
+                         uri='mdgroup.mdstudio_structures.endpoint.convert')
         wf.connect_task(t2.nid, t3.nid, smiles='mol')
 
         # Task 4: Convert mol2 to 3D mol2 irrespective if input is 1D/2D or 3D
         #         mol2 If 'output_format' is not specified it is deduced from
         #         the input wich is mol2 in this case. There are circumstances
         #         where conversion to 3D fails, retry upto 3 times.
-        t4 = wf.add_task('Make_3D', task_type='WampTask', uri='mdgroup.lie_structures.endpoint.make3d', retry_count=3)
+        t4 = wf.add_task('Make_3D',
+                         task_type='WampTask',
+                         uri='mdgroup.mdstudio_structures.endpoint.make3d',
+                         retry_count=3)
         wf.connect_task(t3.nid, t4.nid, 'mol')
         wf.connect_task(t1.nid, t4.nid, 'steps')
 
@@ -77,4 +84,4 @@ class LoopDemonstrationWorkflow(ComponentSession):
 
 
 if __name__ == "__main__":
-    main(LoopDemonstrationWorkflow)
+    main(LoopDemonstrationWorkflow, auto_reconnect=False, daily_log=False)
