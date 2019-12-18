@@ -1,0 +1,7 @@
+{
+    "docker_image": "mdstudio/cerise-mdstudio-binac:gpu",
+    "docker_name": "binac", 
+    "password": "MD@_b!nAC233clust", 
+    "port": 29593, 
+    "username": "st_gs103857"
+}

@@ -1,0 +1,7 @@
+{
+    "docker_image": "mdstudio/cerise-mdstudio-gt:develop", 
+    "docker_name": "cerise-mdstudio-gt-myuser", 
+    "password": "MD@gt#!", 
+    "port": 29593, 
+    "username": "mdk217"
+}
