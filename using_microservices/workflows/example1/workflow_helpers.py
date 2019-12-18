@@ -17,6 +17,6 @@ def get_docking_medians(**kwargs):
     :return:
     """
 
-    medians = [v.get('path') for v in kwargs.get('output', {}).values() if v.get('mean', True)]
-    if medians:
-        return {'medians': medians[0]}
+    medians = [v.get('PATH') for v in kwargs.get('result', {}).values() if v.get('MEAN', True)]
+
+    return {'medians': medians}

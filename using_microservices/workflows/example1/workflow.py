@@ -8,7 +8,7 @@ from mdstudio.deferred.chainable import chainable
 from mdstudio.component.session import ComponentSession
 from mdstudio.runner import main
 
-from lie_workflow import Workflow
+from mdstudio_workflow import Workflow
 
 
 class ExampleWorkflow(ComponentSession):
@@ -58,42 +58,32 @@ class ExampleWorkflow(ComponentSession):
         protein_binding_center = [4.9264, 19.0796, 21.9892]
 
         # Build Workflow
-        wf = Workflow()
-        # Task 1: convert the SMILES string to mol2 format (2D).
+        wf = Workflow(description='MDStudio WAMP workflow')
 
+        # Task 1: convert the SMILES string to mol2 format (2D).
         # Add a task using the 'add_task' method always defining:
         # an administrative title of the task and the task type here a WampTask
         # because we are calling an microservice endpoint defined by uri.
-        # 'store_output'because we want to store the task input/output to disk.
+        # 'store_output' is True by default and stores the task input/output to disk.
         t1 = wf.add_task('Format_conversion',
                          task_type='WampTask',
-                         uri='mdgroup.lie_structures.endpoint.convert',
-                         store_output=True)
+                         uri='mdgroup.mdstudio_structures.endpoint.convert')
+
         # Use 'set_input' do define the input to a task. As we are now building
         # a workflow specification these will be task constants but the same
         # method will be used later on to define specific input when using the
         # workflow specification for a ligand.
-        # The 'workdir' argument points to a tmp directory that is shared between
-        # the microservice docker image and the host system to store results.
-        t1.set_input(input_format=ligand_format,
-                     output_format='mol2',
-                     from_file=False,
-                     workdir='/tmp/mdstudio/lie_structures')
+        t1.set_input(output_format='mol2')
 
         # Task 2: Covert mol2 to 3D mol2 irrespective if input is 1D/2D or 3D mol2
-
         # This particular 3D conversion routine is known to fail sometimes but by
         # setting retry_count to 3 the workflow manager will retry 3 times before
         # failing.
         t2 = wf.add_task('Make_3D',
                          task_type='WampTask',
-                         uri='mdgroup.lie_structures.endpoint.make3d',
-                         store_output=True,
+                         uri='mdgroup.mdstudio_structures.endpoint.make3d',
                          retry_count=3)
-        t2.set_input(input_format='mol2',
-                     output_format='mol2',
-                     from_file=False,
-                     to_file=False)
+        t2.set_input(output_format='mol2')
 
         # Use 'connect_task' to connect t1 to t2 using their unique identifiers
         # (nid). In addition we can specify the parameters for task 1 we wish to
@@ -105,61 +95,49 @@ class ExampleWorkflow(ComponentSession):
         # Task 3: Adjust ligand protonation state to a given pH if applicable
         t3 = wf.add_task('Add hydrogens',
                          task_type='WampTask',
-                         uri='mdgroup.lie_structures.endpoint.addh',
-                         store_output=True)
-        t3.set_input(input_format='mol2',
-                     output_format='mol2',
+                         uri='mdgroup.mdstudio_structures.endpoint.addh')
+        t3.set_input(output_format='mol2',
                      correctForPH=True,
-                     pH=pH,
-                     from_file=False,
-                     to_file=False)
+                     pH=pH)
         wf.connect_task(t2.nid, t3.nid, 'mol')
 
         # Task 4: Get the formal charge for the protonated mol2 to use as input
         # for ACPYPE or ATB
-
-        # Here store_output equals False wich will keep all output in memory and
+        # Here store_output equals False which will keep all output in memory and
         # finally as part of the stored workflow file (*.jgf)
         t4 = wf.add_task('Get charge',
                          task_type='WampTask',
-                         uri='mdgroup.lie_structures.endpoint.info')
-        t4.set_input(input_format='mol2',
-                     output_format='mol2',
-                     from_file=False,
-                     to_file=False)
+                         uri='mdgroup.mdstudio_structures.endpoint.info',
+                         store_output=False)
+        t4.set_input(input_format='mol2')
         wf.connect_task(t3.nid, t4.nid, 'mol')
 
         # Task 5: Create rotations of the molecule for better sampling
         t5 = wf.add_task('Create 3D rotations',
                          task_type='WampTask',
-                         uri='mdgroup.lie_structures.endpoint.rotate',
-                         store_output=True)
-        t5.set_input(input_format='mol2',
-                     from_file=False,
-                     to_file=False,
-                     rotations=[[1, 0, 0, 90], [1, 0, 0, -90], [0, 1, 0, 90], [0, 1, 0, -90], [0, 0, 1, 90],
-                                [0, 0, 1, -90]],
-                     workdir='/tmp/mdstudio/lie_structures')
+                         uri='mdgroup.mdstudio_structures.endpoint.rotate')
+        t5.set_input(rotations=[[1, 0, 0, 90], [1, 0, 0, -90], [0, 1, 0, 90], [0, 1, 0, -90], [0, 0, 1, 90],
+                                [0, 0, 1, -90]])
         wf.connect_task(t3.nid, t5.nid, 'mol')
 
         # Task 6: Run PLANTS on ligand and protein
+        # The 'workdir' argument points to a tmp directory that is shared between
+        # the microservice docker image and the host system to store results.
         t6 = wf.add_task('Plants docking',
                          task_type='WampTask',
-                         uri='mdgroup.lie_plants_docking.endpoint.docking',
-                         store_output=True)
+                         uri='mdgroup.mdstudio_smartcyp.endpoint.docking')
         t6.set_input(cluster_structures=100,
                      bindingsite_center=protein_binding_center,
                      bindingsite_radius=12,
                      protein_file=protein_file,
-                     min_rmsd_tolerance=3.0,
-                     exec_path='/tmp/mdstudio/lie_plants_docking/plants_linux',
-                     workdir='/tmp/mdstudio/lie_plants_docking')
+                     threshold=3.0,
+                     base_work_dir='/tmp/mdstudio/mdstudio_smartcyp')
 
-        # Here we pass the 'mol' parameter from task 5 to task 6 where it is
+        # Here we pass only the 'mol' parameter from task 5 to task 6 where it is
         # named 'ligand_file'
-        wf.connect_task(t5.nid, t6.nid, mol='ligand_file')
+        wf.connect_task(t5.nid, t6.nid, 'mol', mol='ligand_file')
 
-        # Task 7: Collect medians of clustered docking poses.
+        # Task 7: Extract cluster medians from output using a custom function.
 
         # A task of type 'PythonTask' allows to add custom python functions
         # or classes to the workflow. They are defined using the 'custom_func'
@@ -167,13 +145,19 @@ class ExampleWorkflow(ComponentSession):
         # containing the function should be available as part of the PYTHONPATH.
         t7 = wf.add_task('Get cluster medians',
                          task_type='PythonTask',
-                         custom_func='workflow_helpers.get_docking_medians',
-                         store_output=True)
-        wf.connect_task(t6.nid, t7.nid, 'output')
+                         custom_func='workflow_helpers.get_docking_medians')
+        wf.connect_task(t6.nid, t7.nid, 'result')
+
+        # Task 8: retrieve median structures
+        t8 = wf.add_task('Retrieve median structures',
+                         task_type='WampTask',
+                         uri='mdgroup.mdstudio_smartcyp.endpoint.docking_structures')
+        t8.set_input(create_ensemble=False)
+        wf.connect_task(t7.nid, t8.nid, medians='paths')
 
         # Save the workflow specification
         wf.save('workflow_spec.jgf')
-        # wf.save(os.path.join(cwd, 'workflow_spec.jgf'))
+
         # Lets run the workflow specification for a number of ligand SMILES
         # The current microservice instance (self) is passed as task_runner to the workflow
         # it will be used to make calls to other microservice endpoints when task_type equals WampTask.
@@ -184,7 +168,7 @@ class ExampleWorkflow(ComponentSession):
                                     'C[C@]12CC[C@H]3[C@@H](CC=C4CCCC[C@]34CO)[C@@H]1CCC2=O',
                                     'CC12CCC3C(CC=C4C=CCCC34C)C1CCC2=O'], start=1):
             wf.load('workflow_spec.jgf')
-            wf.input(wf.workflow.root, mol=ligand)
+            wf.input(t1.nid, mol={'content': ligand, 'path': None, 'extension': ligand_format})
             wf.run(project_dir='./ligand-{0}'.format(i))
             while wf.is_running:
                 yield sleep(1)
@@ -193,4 +177,4 @@ class ExampleWorkflow(ComponentSession):
 
 
 if __name__ == "__main__":
-    main(ExampleWorkflow)
+    main(ExampleWorkflow, auto_reconnect=False, daily_log=False)
